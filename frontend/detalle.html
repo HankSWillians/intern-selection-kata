@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b4a7a" />
+    <title>Detalle del practicante · Selección de Practicantes</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script type="module" src="/js/detail.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a href="/" class="brand"><span class="brand-mark" aria-hidden="true"></span>Selección de Practicantes</a>
+        <nav class="nav" aria-label="Principal" data-nav></nav>
+      </div>
+    </header>
+    <main class="content">
+      <a class="back" href="/panel.html" data-back>← Volver a la lista</a>
+
+      <p class="state" role="status" data-loading>Cargando…</p>
+      <div class="card state" role="alert" data-load-error hidden></div>
+
+      <div data-detail hidden>
+        <header class="detail-header">
+          <div>
+            <h1 data-name></h1>
+            <p class="meta" data-created></p>
+          </div>
+          <span data-badge></span>
+        </header>
+
+        <div class="layout">
+          <section class="card">
+            <h2>Información</h2>
+            <dl class="data">
+              <div><dt>Correo</dt><dd><a data-email></a></dd></div>
+              <div><dt>Celular</dt><dd data-phone></dd></div>
+              <div><dt>Universidad</dt><dd data-university></dd></div>
+              <div><dt>Carrera</dt><dd data-career></dd></div>
+              <div><dt>Semestre</dt><dd data-semester></dd></div>
+              <div><dt>Tratamiento de datos</dt><dd data-consent></dd></div>
+            </dl>
+            <button type="button" class="btn btn-secondary" data-download>Descargar hoja de vida</button>
+          </section>
+
+          <section class="card decision">
+            <h2>Decisión</h2>
+            <p class="meta" data-reviewed></p>
+
+            <label for="note">Observación (opcional)</label>
+            <textarea id="note" rows="4" maxlength="500" placeholder="Por ejemplo: buen perfil en datos; agendar entrevista."></textarea>
+            <p class="hint"><span data-note-count>0</span> / 500</p>
+
+            <div class="buttons">
+              <button type="button" class="btn btn-viable" data-decide="VIABLE">Viable</button>
+              <button type="button" class="btn btn-not-viable" data-decide="NOT_VIABLE">No viable</button>
+            </div>
+            <p class="feedback" role="status" data-feedback></p>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

@@ -2,7 +2,7 @@
 
 **Herramienta web para que los practicantes registren sus datos y su hoja de vida, y para que los analistas de selección los revisen y los marquen como «Viable» o «No viable».**
 
-![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
+![Estado](https://img.shields.io/badge/estado-listo-brightgreen)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Flask](https://img.shields.io/badge/Flask-3.1-lightgrey)
 
@@ -92,13 +92,15 @@ intern-selection-kata/
 ├── backend/
 │   ├── app/                 # aplicación Flask
 │   ├── migrations/          # 001_create_interns.sql, ...
-│   ├── tests/               # pytest
+│   ├── tests/               # pytest (API) y e2e/ (Playwright)
 │   ├── requirements.txt
 │   └── requirements-dev.txt
 ├── frontend/
 │   ├── index.html           # registro del practicante
+│   ├── login.html · panel.html · detalle.html
 │   ├── css/styles.css
-│   └── js/
+│   └── js/                  # un módulo por página + api, auth, validación y catálogo
+├── docs/screenshots/        # capturas de este README
 ├── specs/                   # requerimientos
 ├── .env.example
 ├── CLAUDE.md                # contexto del proyecto y reglas para agentes de IA
@@ -132,6 +134,15 @@ python -m flask --app app run
 
 Abre <http://localhost:5000>.
 
+| Página | Dirección | Quién |
+|---|---|---|
+| Registro del practicante | <http://localhost:5000/> | Público |
+| Ingreso del analista | <http://localhost:5000/login.html> | Público |
+| Panel de practicantes | <http://localhost:5000/panel.html> | Analista |
+| Detalle de un practicante | `/detalle.html?id=…` (desde el panel) | Analista |
+
+**Credenciales del analista:** usuario `analista` (o el de `ANALYST_USERNAME`) y la contraseña que pusiste en `ANALYST_PASSWORD`. Con `DEMO_DATA=true` el panel arranca con 4 practicantes de ejemplo.
+
 ## Configuración
 
 Toda la configuración va en el `.env` de la raíz, que está en `.gitignore` y nunca se sube.
@@ -151,14 +162,40 @@ Toda la configuración va en el `.env` de la raíz, que está en `.gitignore` y 
 ```bash
 cd backend
 pip install -r requirements-dev.txt
+python -m playwright install chromium   # solo la primera vez, para las pruebas del navegador
 python -m pytest
 ```
+
+- **API** (`tests/test_*.py`, 42 pruebas): registro, validaciones, duplicados, lista, filtro, decisión, descarga, login y datos de demostración, con el cliente de pruebas de Flask.
+- **Navegador** (`tests/e2e/`, 8 pruebas): formulario, login, decisión desde la lista y desde el detalle, filtros, descarga y sesión vencida, con Playwright contra la aplicación real.
 
 Los casos de prueba (CP-01 a CP-25) y su trazabilidad con los requerimientos están en [`specs/requerimientos.md`](specs/requerimientos.md#10-casos-de-prueba-y-trazabilidad).
 
 ## Capturas de pantalla
 
-*Se agregan al terminar la implementación.*
+**Formulario con validación** (campos obligatorios en JavaScript)
+
+![Formulario con errores de validación](docs/screenshots/02-registro-errores.png)
+
+**Registro exitoso**
+
+![Registro exitoso](docs/screenshots/03-registro-exitoso.png)
+
+**Ingreso del analista**
+
+![Ingreso del analista](docs/screenshots/04-login.png)
+
+**Panel: lista con filtro por estado y botones «Viable» / «No viable»**
+
+![Panel del analista](docs/screenshots/05-panel.png)
+
+**Detalle: información, observación y descarga de la hoja de vida**
+
+![Detalle del practicante](docs/screenshots/08-detalle.png)
+
+**En el celular**
+
+<img src="docs/screenshots/10-movil-panel.png" alt="Panel en el celular" width="300" />
 
 ## Cómo contribuir
 

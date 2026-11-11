@@ -41,9 +41,9 @@ Herramienta web sencilla con dos partes (documento del reto):
 ## 3. Pendientes
 
 - [x] Specs completas (`specs/requerimientos.md`).
-- [ ] PR 1, base: Flask, migraciones, frontend estático y CI (`feat/project-scaffold`).
-- [ ] PR 2, API: RF-09 a RF-19 en el backend con pytest (`feat/backend-api`).
-- [ ] PR 3, frontend: registro, login, panel y detalle; README final y capturas (`feat/frontend`).
+- [x] PR 1, base: Flask, migraciones, frontend estático y CI (`feat/project-scaffold`).
+- [x] PR 2, API: RF-09 a RF-19 en el backend con pytest (`feat/backend-api`).
+- [x] PR 3, frontend: registro, login, panel y detalle; Playwright; README final y capturas (`feat/frontend`).
 - [ ] Repositorio público y envío antes de las 11:00.
 - [ ] Ensayo de la presentación (≤ 7 min).
 
@@ -74,4 +74,6 @@ Herramienta web sencilla con dos partes (documento del reto):
 - Las validaciones van en el frontend **y** en el backend (RF-12), con los mismos mensajes de la spec.
 - Las listas de universidades y carreras están en `backend/app/catalog.py` y `frontend/js/catalog.js`: si cambia una, se cambia la otra.
 - Las pruebas llevan en el nombre o en el docstring el caso de la spec que cubren (`CP-xx`).
-- Ejecutar: `python -m flask --app app run` desde `backend/`. Probar: `python -m pytest` desde `backend/`.
+- Ejecutar: `python -m flask --app app run` desde `backend/`. Probar: `python -m pytest` desde `backend/` (las pruebas de `tests/e2e/` necesitan `python -m playwright install chromium`).
+- Las ayudas de las pruebas están en `tests/helpers.py`, no en `conftest.py`: hay dos `conftest.py` y un `from conftest import` choca entre ellos.
+- Frontend: módulos ES (`<script type="module">`), sin compilación. Todo dato que viene del formulario se escapa con `escapeHtml` antes de ponerlo en el HTML.
