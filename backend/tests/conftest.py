@@ -6,24 +6,7 @@ import pytest
 
 from app import create_app
 from app.config import Settings
-
-ANALYST = "analista"
-PASSWORD = "clave-de-pruebas"
-
-
-def make_settings(tmp_path: Path, **overrides) -> Settings:
-    values = dict(
-        db_path=tmp_path / "data" / "test.db",
-        upload_dir=tmp_path / "uploads",
-        max_cv_mb=5,
-        analyst_username=ANALYST,
-        analyst_password=PASSWORD,
-        jwt_secret="clave-jwt-de-pruebas-solo-para-tests-0123456789",
-        jwt_ttl_hours=8,
-        demo_data=False,
-    )
-    values.update(overrides)
-    return Settings(**values)
+from helpers import login, make_settings
 
 
 @pytest.fixture
@@ -41,3 +24,9 @@ def app(settings: Settings):
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def auth(client) -> dict:
+    """Encabezado con un token válido del analista."""
+    return {"Authorization": f"Bearer {login(client)}"}
