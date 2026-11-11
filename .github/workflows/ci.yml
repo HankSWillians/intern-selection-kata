@@ -21,7 +21,8 @@
 #
 # Mientras `backend/requirements.txt` no exista, el job se omite y
 # `CI Gate` pasa en verde. El frontend es HTML, CSS y JS sin compilar:
-# lo prueban las pruebas de Playwright dentro del job de Python.
+# lo prueban las pruebas de Playwright dentro del job de Python, con el
+# Google Chrome del runner.
 #
 # NO renombrar el job `CI Gate`: el ruleset de `main` lo exige por
 # nombre exacto.
@@ -149,12 +150,12 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements-dev.txt
 
-      # Solo si el proyecto ya usa Playwright (pruebas del navegador).
-      - name: Instalar navegador para Playwright
-        if: hashFiles('backend/tests/e2e/**') != ''
-        run: python -m playwright install --with-deps chromium
-
+      # Las pruebas del navegador usan el Google Chrome que ya trae el runner
+      # de Ubuntu: no se descarga Chromium ni se instalan paquetes del sistema
+      # (más rápido, y no depende de los espejos de apt).
       - name: Pruebas
+        env:
+          PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
         run: python -m pytest
 
   # ----------------------------------------------------------
