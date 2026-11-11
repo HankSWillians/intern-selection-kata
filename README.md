@@ -27,14 +27,16 @@
 ## Funcionalidades
 
 ### Formulario del practicante
-- Registro de nombre completo, correo electrónico, carrera universitaria y semestre actual.
+- Registro de nombre completo, correo electrónico, celular, universidad, carrera y semestre actual.
 - Carga de la hoja de vida en PDF (máximo 5 MB).
+- Aceptación del tratamiento de datos personales (Ley 1581 de 2012).
 - Validación de campos obligatorios y de formato, en el navegador y en el servidor.
 
 ### Panel del analista
 - Lista de practicantes registrados con su estado: Pendiente, Viable o No viable.
+- Filtro por estado, con la cantidad de cada uno.
 - Detalle de cada practicante.
-- Botones «Viable» y «No viable».
+- Botones «Viable» y «No viable», con una observación opcional.
 - Descarga de la hoja de vida.
 - Acceso con usuario y contraseña.
 
@@ -56,9 +58,10 @@ flowchart LR
 | Método | Ruta | Uso |
 |---|---|---|
 | POST | `/interns` | Registrar practicante con su hoja de vida (`multipart/form-data`) |
-| GET | `/interns` | Listar practicantes |
+| GET | `/interns` | Listar practicantes; filtro opcional `?status=` |
+| GET | `/interns/summary` | Cantidad por estado |
 | GET | `/interns/{id}` | Ver detalle |
-| PATCH | `/interns/{id}/status` | Cambiar el estado a `VIABLE` o `NOT_VIABLE` |
+| PATCH | `/interns/{id}/status` | Cambiar el estado a `VIABLE` o `NOT_VIABLE`, con observación opcional |
 | GET | `/interns/{id}/cv` | Descargar la hoja de vida |
 | POST | `/auth/login` | Iniciar sesión del analista |
 
@@ -152,7 +155,7 @@ npm start
 (cd frontend && npm test)
 ```
 
-Los casos de prueba (CP-01 a CP-16) y su trazabilidad con los requerimientos están en [`specs/requerimientos.md`](specs/requerimientos.md#6-casos-de-prueba-y-trazabilidad).
+Los casos de prueba (CP-01 a CP-25) y su trazabilidad con los requerimientos están en [`specs/requerimientos.md`](specs/requerimientos.md#10-casos-de-prueba-y-trazabilidad).
 
 ## Capturas de pantalla
 

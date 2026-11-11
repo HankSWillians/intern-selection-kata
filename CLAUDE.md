@@ -25,13 +25,23 @@ Herramienta web sencilla con dos partes:
 - **Repositorio privado** en GitHub, creado y publicado desde GitHub Desktop.
 - **Se implementan los dos opcionales** (login y descarga) si los obligatorios ya pasan sus pruebas.
 
+**11 de noviembre de 2026** (detalle en la sección 13 de la spec):
+- Campos adicionales al reto: universidad, celular y casilla de tratamiento de datos (Ley 1581). Carrera y universidad con lista + «Otra».
+- El analista cambia entre Viable y No viable, nunca vuelve a Pendiente; observación siempre opcional.
+- Login con JWT, como Kronos. Panel con filtro por estado; sin búsqueda.
+- Diseño con paleta inspirada en el Banco de Bogotá, **sin su logo ni su nombre** en la aplicación.
+- Pruebas: JUnit 5 + MockMvc y Vitest; sin Playwright.
+- Datos de demostración con el perfil `demo`.
+
 ## 3. Pendientes
 
 - [ ] ⚠️ Confirmar con Selección si el reto es este (desarrollo) o una «Kata Tester Junior», como dice el WhatsApp.
 - [ ] Estructura base: `backend/` y `frontend/`.
-- [ ] RF-01 a RF-12.
+- [x] Specs completas (`specs/requerimientos.md`).
+- [ ] RF-01 a RF-12 y RF-15 a RF-18.
 - [ ] RF-13 (login) y RF-14 (descarga).
-- [ ] Pruebas: CP-01 a CP-16.
+- [ ] RF-19 (datos de demostración).
+- [ ] Pruebas: CP-01 a CP-25.
 - [ ] README final con capturas.
 - [ ] Datos de ejemplo para la demo y ensayo de la presentación (≤ 7 min).
 

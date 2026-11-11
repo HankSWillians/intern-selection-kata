@@ -4,7 +4,7 @@ Requerimientos funcionales y no funcionales del reto *Kata Practicing – Challe
 
 | Archivo | Contenido | Estado |
 |---|---|---|
-| [requerimientos.md](requerimientos.md) | Alcance, RF, RNF, modelo de datos, API, historias de usuario y casos de prueba | Definido. Una duda abierta (⚠️) |
+| [requerimientos.md](requerimientos.md) | Alcance, permisos, reglas por campo, panel, acceso, RNF, modelo de datos, API, historias de usuario, casos de prueba y decisiones | Definido (11 de noviembre de 2026). Una duda abierta (⚠️) |
 
 ## Convenciones
 
