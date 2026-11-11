@@ -1,0 +1,35 @@
+# ============================================================
+# .gitattributes
+# ============================================================
+# El equipo trabaja en Windows y la CI corre en Ubuntu. Todo se
+# guarda en Git con LF; sin esto aparecen diffs fantasma y `mvnw`
+# falla en el runner de Linux si llega con CRLF.
+# ============================================================
+
+* text=auto eol=lf
+
+# ---------- Scripts que deben ser LF ----------
+mvnw            text eol=lf
+*.sh            text eol=lf
+
+# ---------- Scripts de Windows: CRLF ----------
+mvnw.cmd        text eol=crlf
+*.cmd           text eol=crlf
+*.bat           text eol=crlf
+*.ps1           text eol=crlf
+
+# ---------- Binarios ----------
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.webp          binary
+*.pdf           binary
+*.jar           binary
+*.woff          binary
+*.woff2         binary
+*.ttf           binary
+
+# ---------- Generados: se pliegan en el diff de los PRs ----------
+package-lock.json   linguist-generated=true

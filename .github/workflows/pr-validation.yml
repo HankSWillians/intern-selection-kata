@@ -1,0 +1,100 @@
+# ============================================================
+# PR Validation — título del PR y nombre de la rama
+# ============================================================
+# Los PRs se integran con SQUASH: el título del PR se convierte en
+# el mensaje del commit en `main`. Por eso se valida como
+# Conventional Commit.
+#
+# El título y la rama los escribe quien abre el PR: nunca se
+# interpolan con ${{ }} dentro de `run:` (sería inyección de shell);
+# viajan por `env:`.
+#
+# NO renombrar el job `PR Validation`: el ruleset de `main` lo exige
+# por nombre exacto.
+# ============================================================
+
+name: PR Validation
+
+on:
+  pull_request:
+    # `edited`: al corregir el título se vuelve a validar.
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: PR Validation
+    # Job de segundos sin checkout: basta el runner ligero de 1 vCPU.
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Validar título y rama
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -uo pipefail
+
+          # Mantener sincronizado con "Cómo contribuir" del README.
+          TYPES='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+          ERRORS=()
+
+          # ---------- Título ----------
+          if ! grep -Eq "^(${TYPES})(\([a-z0-9][a-z0-9._/-]*\))?!?: .+$" <<< "${PR_TITLE}"; then
+            ERRORS+=("El título no sigue Conventional Commits: \`<type>(<scope opcional>): <descripción>\`.")
+          fi
+          if grep -Eq '\.$' <<< "${PR_TITLE}"; then
+            ERRORS+=("El título no debe terminar en punto.")
+          fi
+
+          # Dependabot queda exento de estas dos reglas: escribe "Bump"
+          # con mayúscula en repositorios con poco historial, y sus
+          # títulos de grupo pasan de 72 caracteres.
+          if [ "${PR_AUTHOR}" != "dependabot[bot]" ]; then
+            DESC="${PR_TITLE#*: }"
+            if grep -Eq '^[A-Z][a-z]' <<< "${DESC}"; then
+              ERRORS+=("La descripción empieza en minúscula: \`add intern form\`, no \`Add intern form\`.")
+            fi
+            if [ "${#PR_TITLE}" -gt 72 ]; then
+              ERRORS+=("El título tiene ${#PR_TITLE} caracteres; el máximo es 72.")
+            fi
+          fi
+
+          # ---------- Rama ----------
+          if ! grep -Eq "^(dependabot/.+|(${TYPES})/[a-z0-9][a-z0-9._/-]*)$" <<< "${HEAD_REF}"; then
+            ERRORS+=("La rama \`${HEAD_REF}\` no sigue \`<type>/<short-description>\` en minúsculas y sin tildes.")
+          fi
+
+          if [ "${#ERRORS[@]}" -eq 0 ]; then
+            echo "Título y rama válidos."
+            exit 0
+          fi
+
+          for e in "${ERRORS[@]}"; do
+            echo "::error::${e}"
+          done
+
+          {
+            echo "### PR Validation"
+            echo ""
+            for e in "${ERRORS[@]}"; do
+              echo "- ${e}"
+            done
+            echo ""
+            echo "**Formato del título:** \`<type>(<scope opcional>): <descripción en minúscula, sin punto final>\`"
+            echo ""
+            echo "**Tipos:** \`feat\` \`fix\` \`docs\` \`style\` \`refactor\` \`perf\` \`test\` \`build\` \`ci\` \`chore\` \`revert\`"
+            echo ""
+            echo "**Ejemplos:** \`feat(form): add intern registration form\` · \`fix(api): reject duplicated emails\` · rama \`feat/intern-form\`"
+            echo ""
+            echo "El título se corrige editando el PR, sin commit nuevo. Una rama mal nombrada se renombra con \`git branch -m <tipo>/<descripcion>\`, se sube y se abre un PR nuevo."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit 1

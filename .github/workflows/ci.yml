@@ -1,0 +1,236 @@
+# ============================================================
+# CI — build y pruebas de backend y frontend
+# ============================================================
+# Un único workflow que termina en `CI Gate`, el check obligatorio
+# de `main`.
+#
+# En los PRs NO se filtra por rutas con `paths`/`paths-ignore`: si
+# un PR no toca `backend/`, un workflow filtrado no se dispara, su
+# check nunca reporta y el PR queda bloqueado para siempre. En cambio,
+# un job SALTADO dentro de un workflow que sí corrió cuenta como
+# éxito. Por eso el filtrado se hace por dentro, en el job `changes`.
+#
+# Ahorro de minutos de Actions:
+#   - Solo se compila el componente que cambió.
+#   - Los PRs en Draft no gastan runners; la CI corre al marcarlos
+#     como listos (`ready_for_review`).
+#   - Un push nuevo cancela la ejecución anterior del mismo PR.
+#   - En `main` no se revalidan cambios que solo tocan documentación.
+#   - Los jobs ligeros usan `ubuntu-slim` (1 vCPU) y todos tienen
+#     `timeout-minutes`, para que un job colgado no consuma horas.
+#
+# Mientras `backend/pom.xml` o `frontend/package.json` no existan, su
+# job se omite y `CI Gate` pasa en verde.
+#
+# NO renombrar el job `CI Gate`: el ruleset de `main` lo exige por
+# nombre exacto.
+# ============================================================
+
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+    # Solo en `main`, que no es un check obligatorio. Si un push mezcla
+    # documentación y código, la CI sí corre.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+      - ".github/CODEOWNERS"
+      - ".github/dependabot.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # En `main` no se cancela: cada commit debe validarse entero.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # ----------------------------------------------------------
+  # 1. Qué cambió
+  # ----------------------------------------------------------
+  changes:
+    name: Detect changes
+    if: github.event_name == 'push' || !github.event.pull_request.draft
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Historial completo para comparar contra la rama base, pero
+          # sin el contenido de los archivos (`blob:none`): para listar
+          # rutas modificadas basta con los árboles. Solo se escribe en
+          # disco la raíz y `.github/`.
+          fetch-depth: 0
+          filter: blob:none
+          sparse-checkout: .github
+
+      - name: Calcular componentes afectados
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # `--no-renames`: la detección de renombres necesitaría el
+          # contenido de los archivos, que no se descargó. Un renombre
+          # aparece como borrado + alta, y ambas rutas cuentan.
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            CHANGED="$(git diff --name-only --no-renames "origin/${BASE_REF}...HEAD")"
+          elif [ -n "${BEFORE_SHA:-}" ] && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            CHANGED="$(git diff --name-only --no-renames "${BEFORE_SHA}..HEAD")"
+          else
+            # Rama nueva o historial no disponible: se ejecuta todo.
+            CHANGED="ALL"
+          fi
+
+          echo "--- Archivos modificados ---"
+          echo "${CHANGED}"
+
+          # Existe en el commit, aunque no esté escrito en disco por el
+          # sparse checkout. `ls-tree` solo lee árboles.
+          exists() {
+            [ -n "$(git ls-tree HEAD -- "$1")" ]
+          }
+
+          # Un cambio en los propios workflows revalida todo.
+          touched() {
+            [ "${CHANGED}" = "ALL" ] || grep -Eq "^($1/|\.github/workflows/)" <<< "${CHANGED}"
+          }
+
+          BACKEND=false
+          FRONTEND=false
+          if exists backend/pom.xml; then
+            if touched backend; then BACKEND=true; fi
+          else
+            echo "::notice::backend/pom.xml no existe todavía: job Backend omitido."
+          fi
+          if exists frontend/package.json; then
+            if touched frontend; then FRONTEND=true; fi
+          else
+            echo "::notice::frontend/package.json no existe todavía: job Frontend omitido."
+          fi
+
+          echo "backend=${BACKEND}"   >> "$GITHUB_OUTPUT"
+          echo "frontend=${FRONTEND}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Componentes"
+            echo ""
+            echo "| Componente | Se ejecuta |"
+            echo "|---|---|"
+            echo "| backend | \`${BACKEND}\` |"
+            echo "| frontend | \`${FRONTEND}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ----------------------------------------------------------
+  # 2. Backend — Java 21 + Maven
+  # ----------------------------------------------------------
+  backend:
+    name: Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      # `verify` corre las pruebas unitarias y las de integración
+      # (SQLite en un archivo temporal, sin Docker).
+      # -B modo batch, -ntp oculta el progreso de las descargas.
+      - name: Verificar con Maven
+        run: ./mvnw -B -ntp verify
+
+  # ----------------------------------------------------------
+  # 3. Frontend — Angular + npm
+  # ----------------------------------------------------------
+  frontend:
+    name: Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` instala exactamente lo del lockfile y falla si no existe.
+      - name: Instalar dependencias
+        run: npm ci
+
+      # `--if-present`: un script que todavía no existe no rompe la CI.
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Typecheck
+        run: npm run typecheck --if-present
+      - name: Pruebas
+        run: npm run test --if-present
+      - name: Build
+        run: npm run build
+
+  # ----------------------------------------------------------
+  # 4. CI Gate — el check obligatorio
+  # ----------------------------------------------------------
+  # `always()`: se ejecuta aunque un job previo falle. Sin esto el
+  # gate quedaría en "skipped" y el ruleset lo daría por bueno.
+  # En un Draft se salta entero; un Draft no se puede integrar, y al
+  # marcarlo como listo la CI vuelve a correr sobre el mismo commit.
+  # Al añadir un job de componente, agregarlo también a `needs:`.
+  # ----------------------------------------------------------
+  ci-gate:
+    name: CI Gate
+    needs: [changes, backend, frontend]
+    if: always() && (github.event_name == 'push' || !github.event.pull_request.draft)
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Evaluar resultados
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "### CI Gate"
+            echo ""
+            echo "| Job | Resultado |"
+            echo "|---|---|"
+            jq -r 'to_entries[] | "| \(.key) | `\(.value.result)` |"' <<< "${NEEDS_JSON}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # `skipped` es válido: ese componente no cambió o aún no existe.
+          FAILED="$(jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key' <<< "${NEEDS_JSON}")"
+          if [ -n "${FAILED}" ]; then
+            echo "::error::La CI falló en: ${FAILED//$'\n'/, }"
+            exit 1
+          fi
+
+          echo "Todos los jobs pasaron (o no aplicaban)."

@@ -1,0 +1,104 @@
+# ============================================================
+# Plataforma de Selección de Practicantes — .gitignore
+# Backend: Java 21 + Maven (backend/) · Frontend: Angular + npm (frontend/)
+# ============================================================
+
+# ---------- Secretos y configuración local ----------
+# La configuración sensible va por variables de entorno (ver README).
+# Solo se sube `.env.example`, con valores vacíos.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+application-local.*
+application-prod.*
+
+# ---------- Datos de ejecución del backend ----------
+# Base SQLite y hojas de vida subidas (datos personales): nunca entran al repo.
+# Ojo: `*.sql` NO se ignora, porque las migraciones de Flyway sí se suben.
+var/
+uploads/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ---------- Java / Maven ----------
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+# Va DESPUÉS de `*.jar`: en .gitignore gana la última regla que coincide.
+# `.mvn/wrapper/maven-wrapper.properties` NO se ignora: sin él `./mvnw` no funciona.
+!**/.mvn/wrapper/maven-wrapper.jar
+**/.mvn/timing.properties
+hs_err_pid*
+replay_pid*
+dependency-reduced-pom.xml
+/backend/HELP.md
+
+# ---------- Node / Angular / npm ----------
+node_modules/
+dist/
+dist-ssr/
+*.local
+.angular/
+out-tsc/
+*.tsbuildinfo
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Pruebas y cobertura ----------
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ---------- IDEs ----------
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/*
+!.vscode/extensions.json
+.settings/
+.project
+.classpath
+.factorypath
+.apt_generated
+.sts4-cache/
+*.sublime-workspace
+
+# ---------- Claude Code ----------
+.claude/settings.local.json
+CLAUDE.local.md
+
+# ---------- Sistema operativo ----------
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------- Logs y temporales ----------
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*~
