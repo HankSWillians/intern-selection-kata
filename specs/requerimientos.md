@@ -1,13 +1,13 @@
 # Requerimientos – Plataforma Básica de Selección de Practicantes
 
-**Última actualización:** 11 de noviembre de 2026
-**Estado:** definida. Queda una duda abierta (⚠️, sección 1). Las decisiones del 11 de noviembre están registradas en la sección 13.
+**Última actualización:** 11 de noviembre de 2026 (cambio de stack a Flask y HTML, CSS y JS)
+**Estado:** definida, sin dudas abiertas. Las decisiones están registradas en la sección 13.
 
 ---
 
 ## 1. Contexto y alcance
 
-La plataforma permite que los practicantes registren sus datos y su hoja de vida en PDF, y que un analista de selección los revise y los marque como **Viable** o **No viable**. Corre en local, sin despliegue en la nube. Corresponde al reto *Kata Practicing – Challenge 1* de la Vicepresidencia de Tecnología, con sustentación de 5 a 7 minutos el 12 de noviembre de 2026 a las 10:00 a. m.
+La plataforma permite que los practicantes registren sus datos y su hoja de vida en PDF, y que un analista de selección los revise y los marque como **Viable** o **No viable**. Corre en local, sin despliegue en la nube. Corresponde al reto *Kata Practicing – Challenge 1* de la Vicepresidencia de Tecnología. Se entrega el 11 de noviembre de 2026 a las 11:00 a. m. y se sustenta en 5 a 7 minutos el 12 de noviembre a las 10:00 a. m.
 
 **Supuestos**
 
@@ -15,7 +15,7 @@ La plataforma permite que los practicantes registren sus datos y su hoja de vida
 - Todo practicante nuevo queda en estado **Pendiente** hasta que el analista decida.
 - Un correo electrónico solo puede registrarse una vez.
 
-⚠️ **Por confirmar:** si el reto que corresponde es el de desarrollo (este PDF) o una kata de tester, como dice el mensaje de WhatsApp de Selección.
+**Alcance confirmado** (11 de noviembre de 2026): el mensaje de Selección menciona una «Kata Tester Junior», pero el correo no especifica otro reto, así que la base es el documento del reto (desarrollo).
 
 ## 2. Roles y permisos
 
@@ -50,7 +50,7 @@ El practicante no tiene cuenta: después de enviar el formulario no puede consul
 
 ### 3.2 Listas
 
-Viven en el código (`frontend` y `backend` comparten los mismos valores), no en la base de datos. Cambiarlas es un cambio de código.
+Viven en el código (`frontend/js/catalog.js` y `backend/app/catalog.py` tienen los mismos valores), no en la base de datos. Cambiarlas es un cambio de código.
 
 **Universidades:** Universidad Nacional de Colombia, Universidad de los Andes, Pontificia Universidad Javeriana, Universidad del Rosario, Universidad Distrital Francisco José de Caldas, Universidad El Bosque, Universidad de La Sabana, Escuela Colombiana de Ingeniería Julio Garavito, Universidad Externado de Colombia, Universidad Militar Nueva Granada, Universidad Piloto de Colombia, Universidad Católica de Colombia, Universidad Sergio Arboleda, Universidad EAN, Universidad Santo Tomás, Fundación Universitaria Konrad Lorenz, Politécnico Grancolombiano, Otra.
 
@@ -86,22 +86,23 @@ Viven en el código (`frontend` y `backend` comparten los mismos valores), no en
 
 ### 4.1 Lista
 
-- **RF-06.** El panel muestra una tabla con los practicantes registrados: nombre, universidad, carrera, semestre, estado y fecha de registro.
+- **RF-06.** El panel (`/panel.html`) muestra una tabla con los practicantes registrados: nombre, universidad, carrera, semestre, estado, fecha de registro y los botones de decisión (RF-08).
   - Orden: los más recientes primero.
   - Cada estado tiene su color y su texto (RNF-05): Pendiente, Viable, No viable. El color nunca es la única señal.
   - Sin registros: «No hay practicantes registrados».
 - **RF-16.** **Filtro por estado.** Encima de la tabla hay pestañas «Todos», «Pendientes», «Viables» y «No viables», cada una con su cantidad.
-  - El filtro elegido se refleja en la URL (`/panel?estado=pendientes`), para que se conserve al recargar.
+  - El filtro elegido se refleja en la URL (`/panel.html?estado=pendientes`), para que se conserve al recargar.
   - Una pestaña sin resultados dice, por ejemplo, «No hay practicantes viables».
 
 ### 4.2 Detalle
 
-- **RF-07.** Al hacer clic en una fila se abre el detalle del practicante (`/panel/practicantes/{id}`), con todos sus datos: nombre, correo, celular, universidad, carrera, semestre, fecha de registro, fecha de aceptación del tratamiento de datos, estado, observación y fecha de la última decisión.
+- **RF-07.** Al hacer clic en el nombre se abre el detalle del practicante (`/detalle.html?id={id}`), con todos sus datos: nombre, correo, celular, universidad, carrera, semestre, fecha de registro, fecha de aceptación del tratamiento de datos, estado, observación y fecha de la última decisión.
   - El detalle tiene un enlace para volver a la lista con el mismo filtro.
 
 ### 4.3 Decisión
 
-- **RF-08.** El detalle tiene los botones **«Viable»** y **«No viable»**. Al pulsar uno, el estado cambia, se guarda y se ve de inmediato en el detalle y en la lista, sin recargar.
+- **RF-08.** Cada fila de la lista y el detalle tienen los botones **«Viable»** y **«No viable»**, como pide el reto («página de listado para los analistas con botones de "Viable" y "No viable"»). Al pulsar uno, el estado cambia, se guarda y se ve de inmediato, sin recargar.
+  - Desde la lista se decide sin observación; para escribir una, se usa el detalle (RF-17).
   - El botón del estado actual se muestra activo y no se puede pulsar.
   - Tras guardar aparece «Decisión guardada»; si falla, «No pudimos guardar la decisión. Intenta de nuevo.» y el estado no cambia.
 - **RF-17.** **Observación.** Junto a los botones hay un campo de texto **opcional**, de máximo 500 caracteres, que se guarda con la decisión.
@@ -126,12 +127,12 @@ Viven en el código (`frontend` y `backend` comparten los mismos valores), no en
 
 - **RF-13.** Solo el analista con sesión puede ver el panel y llamar a las rutas de consulta, decisión y descarga. El formulario de registro es público.
 - **Credenciales:** usuario y contraseña en las variables de entorno `ANALYST_USERNAME` y `ANALYST_PASSWORD`. Al arrancar, el backend guarda la contraseña en memoria con hash BCrypt y no vuelve a usar el texto plano. Si falta la contraseña o `JWT_SECRET` tiene menos de 32 caracteres, el backend no arranca.
-- **Inicio de sesión** (`/login`): `POST /api/v1/auth/login` con usuario y contraseña.
+- **Inicio de sesión** (`/login.html`): `POST /api/v1/auth/login` con usuario y contraseña.
   - Correcto: devuelve un **JWT** firmado con `JWT_SECRET` (HS256), que vence a las **8 horas**.
   - Incorrecto: 401 y el mensaje «Usuario o contraseña incorrectos», sin decir cuál de los dos falló.
 - **Sesión en el frontend:** el token se guarda en `sessionStorage` (se borra al cerrar la pestaña) y viaja en el encabezado `Authorization: Bearer <token>`.
-  - Si una respuesta llega con 401 (token vencido o inválido), se borra el token y se redirige a `/login` con el mensaje «Tu sesión expiró. Vuelve a iniciar sesión.»
-  - Entrar a `/panel` sin sesión redirige a `/login`; tras ingresar, vuelve a la página que se pidió.
+  - Si una respuesta llega con 401 (token vencido o inválido), se borra el token y se redirige a `/login.html` con el mensaje «Tu sesión expiró. Vuelve a iniciar sesión.»
+  - Entrar a `/panel.html` o `/detalle.html` sin sesión redirige a `/login.html`; tras ingresar, vuelve a la página que se pidió.
   - El panel tiene un botón «Cerrar sesión».
 
 ## 6. Requerimientos no funcionales
@@ -139,18 +140,18 @@ Viven en el código (`frontend` y `backend` comparten los mismos valores), no en
 | ID | Categoría | Requerimiento |
 |---|---|---|
 | RNF-01 | Ejecución | Funciona en local; no requiere nube ni Docker |
-| RNF-02 | Persistencia | Base de datos SQLite en un único archivo (`DB_PATH`); se crea sola al arrancar y Flyway aplica las migraciones |
+| RNF-02 | Persistencia | Base de datos SQLite en un único archivo (`DB_PATH`); se crea sola al arrancar y se aplican las migraciones numeradas de `backend/migrations/` (`001_…sql`), cada una una sola vez |
 | RNF-03 | Archivos | Las hojas de vida se guardan en `UPLOAD_DIR` con nombre generado (RF-02); la base guarda solo ese nombre |
-| RNF-04 | Tecnología | Frontend en Angular 22 con TypeScript; backend en Java 21 con Spring Boot 4.1; solo herramientas gratuitas |
+| RNF-04 | Tecnología | Frontend en HTML, CSS y JavaScript puro, sin framework, como sugiere el reto; backend en Python 3.12 con Flask 3.1, que también sirve el frontend; solo herramientas gratuitas |
 | RNF-05 | Usabilidad | Interfaz en español. Estados con color **y** texto. Contraste de texto de al menos 4,5:1. Cada campo con su etiqueta visible |
 | RNF-06 | Seguridad | Solo PDF reales (RF-02); nombres de archivo generados; credenciales y secretos solo en `.env`; las hojas de vida y los datos solo se entregan con sesión |
-| RNF-07 | Mantenibilidad | Código por capas (controlador, servicio, repositorio) y versionado con GitHub Flow |
+| RNF-07 | Mantenibilidad | Código por capas (rutas, servicio, repositorio) y versionado con GitHub Flow |
 | RNF-08 | Documentación | README con requisitos, instalación, ejecución, credenciales de prueba y capturas de pantalla |
 | RNF-09 | Rendimiento | Las respuestas de la API tardan menos de 1 segundo con 100 registros en local |
 | RNF-10 | Diseño | Paleta inspirada en el Banco de Bogotá (azul corporativo como color principal), **sin logo ni nombre del banco** dentro de la aplicación. Los valores de color se toman del sitio público del banco al implementar el diseño |
 | RNF-11 | Adaptable | Formulario y panel usables desde 375 px de ancho (celular) |
 | RNF-12 | Errores | Las respuestas de error usan el formato *Problem Details* (RFC 9457), con los errores por campo en `errors` (sección 8) |
-| RNF-13 | Pruebas | Pruebas automatizadas del backend (JUnit 5 y MockMvc) y del frontend (Vitest). La sección 10 dice qué caso cubre cada una |
+| RNF-13 | Pruebas | Pruebas automatizadas de la API con pytest y del navegador con Playwright (Python). La sección 10 dice qué caso cubre cada una |
 
 ## 7. Modelo de datos
 
@@ -327,32 +328,32 @@ Escenario: Descargar PDF
 
 ## 10. Casos de prueba y trazabilidad
 
-La columna **Automatizada** dice dónde vive la prueba: **API** (JUnit 5 + MockMvc, sin pasar por el formulario, para comprobar que el servidor valida por su cuenta), **Front** (Vitest) o **Manual** (se revisa en el navegador antes de la demo).
+La columna **Automatizada** dice dónde vive la prueba: **API** (pytest con el cliente de pruebas de Flask, sin pasar por el formulario, para comprobar que el servidor valida por su cuenta) o **E2E** (Playwright en el navegador).
 
 | ID | Caso | Datos de entrada | Resultado esperado | RF | Automatizada |
 |---|---|---|---|---|---|
 | CP-01 | Registro exitoso | Datos válidos + PDF de 200 KB + casilla marcada | 201; queda en `PENDING`; el PDF existe en `UPLOAD_DIR` | RF-01, RF-02, RF-09 | API |
-| CP-02 | Nombre vacío | Nombre en blanco | «Escribe tu nombre completo»; no se envía | RF-03 | Front y API |
-| CP-03 | Correo inválido | `laura@` | «Escribe un correo válido» | RF-04 | Front y API |
+| CP-02 | Nombre vacío | Nombre en blanco | «Escribe tu nombre completo»; no se envía | RF-03 | E2E y API |
+| CP-03 | Correo inválido | `laura@` | «Escribe un correo válido» | RF-04 | E2E y API |
 | CP-04 | Semestre fuera de rango | 0, 13 y «abc» | 400 con error en `semester` | RF-04, RF-12 | API |
-| CP-05 | Archivo no PDF | `hoja.docx` | «Solo se permiten archivos PDF» | RF-02, RF-04 | Front y API |
-| CP-06 | PDF muy pesado | PDF de 8 MB | 413 / «La hoja de vida no puede pesar más de 5 MB» | RF-02, RF-04 | Front y API |
+| CP-05 | Archivo no PDF | `hoja.docx` | «Solo se permiten archivos PDF» | RF-02, RF-04 | E2E y API |
+| CP-06 | PDF muy pesado | PDF de 8 MB | 413 / «La hoja de vida no puede pesar más de 5 MB» | RF-02, RF-04 | E2E y API |
 | CP-07 | Correo duplicado | Correo ya registrado, con otras mayúsculas | 409 y «Ya existe un registro con este correo» | RF-12 | API |
 | CP-08 | API sin nombre | POST directo sin `fullName` | 400; no se guarda nada ni queda archivo | RF-12 | API |
 | CP-09 | Lista con datos | 3 registros | 3 filas, la más reciente primero | RF-06, RF-10 | API |
-| CP-10 | Lista vacía | Base sin registros | «No hay practicantes registrados» | RF-06 | Manual |
-| CP-11 | Ver detalle | Clic en un practicante | Todos los datos de RF-07 visibles | RF-07 | API y Manual |
-| CP-12 | Marcar Viable | `PENDING` → «Viable» y recargar | `VIABLE` se conserva; `reviewedAt` lleno | RF-08, RF-11 | API y Manual |
+| CP-10 | Lista vacía | Base sin registros | «No hay practicantes registrados» | RF-06 | E2E |
+| CP-11 | Ver detalle | Clic en un practicante | Todos los datos de RF-07 visibles | RF-07 | API y E2E |
+| CP-12 | Marcar Viable | `PENDING` → «Viable» en la fila de la lista y recargar | `VIABLE` se conserva; `reviewedAt` lleno | RF-08, RF-11 | API y E2E |
 | CP-13 | Estado inválido | PATCH con `"MAYBE"` | 400; estado sin cambios | RF-11 | API |
-| CP-14 | Panel sin sesión | Abrir `/panel` y `GET /interns` sin token | Redirige al login; la API responde 401 | RF-13 | API y Manual |
+| CP-14 | Panel sin sesión | Abrir `/panel.html` y `GET /interns` sin token | Redirige al login; la API responde 401 | RF-13 | API y E2E |
 | CP-15 | Login incorrecto | Contraseña errónea | 401 y «Usuario o contraseña incorrectos» | RF-13 | API |
-| CP-16 | Descargar hoja de vida | Clic en «Descargar» | Se descarga el mismo PDF, con el nombre de RF-14 | RF-14 | API y Manual |
-| CP-17 | Sin tratamiento de datos | Casilla sin marcar | 400 y el mensaje de RF-15 | RF-15 | Front y API |
-| CP-18 | Celular inválido | `2001234567` y `30012345` | «Escribe un celular colombiano…» | RF-01, RF-04 | Front y API |
+| CP-16 | Descargar hoja de vida | Clic en «Descargar» | Se descarga el mismo PDF, con el nombre de RF-14 | RF-14 | API y E2E |
+| CP-17 | Sin tratamiento de datos | Casilla sin marcar | 400 y el mensaje de RF-15 | RF-15 | E2E y API |
+| CP-18 | Celular inválido | `2001234567` y `30012345` | «Escribe un celular colombiano…» | RF-01, RF-04 | E2E y API |
 | CP-19 | Universidad «Otra» | «Otra» + «Universidad de Cundinamarca» | Se guarda «Universidad de Cundinamarca» | RF-01 | API |
-| CP-20 | «Otra» sin texto | Carrera «Otra» y texto vacío | «Escribe el nombre de tu carrera» | RF-01, RF-03 | Front y API |
+| CP-20 | «Otra» sin texto | Carrera «Otra» y texto vacío | «Escribe el nombre de tu carrera» | RF-01, RF-03 | E2E y API |
 | CP-21 | PDF falso | Archivo de texto renombrado a `.pdf` | «Solo se permiten archivos PDF» | RF-02 | API |
-| CP-22 | Filtrar por estado | 2 pendientes y 1 viable; pestaña «Pendientes» | 2 filas; conteos 3 / 2 / 1 / 0 | RF-16 | API y Manual |
+| CP-22 | Filtrar por estado | 2 pendientes y 1 viable; pestaña «Pendientes» | 2 filas; conteos 3 / 2 / 1 / 0 | RF-16 | API y E2E |
 | CP-23 | Cambiar decisión con observación | `VIABLE` → `NOT_VIABLE` con nota | Estado y nota nuevos; `reviewedAt` actualizado | RF-17, RF-18 | API |
 | CP-24 | Volver a Pendiente | PATCH con `"PENDING"` | 400; estado sin cambios | RF-18 | API |
 | CP-25 | Token vencido o alterado | Token con firma cambiada | 401 | RF-13 | API |
@@ -365,7 +366,7 @@ La columna **Automatizada** dice dónde vive la prueba: **API** (JUnit 5 + MockM
 | RF-02 | CP-01, CP-05, CP-06, CP-21 |
 | RF-03 | CP-02, CP-20 |
 | RF-04 | CP-03, CP-04, CP-05, CP-06, CP-18 |
-| RF-05 | CP-01 (manual: mensajes de envío) |
+| RF-05 | CP-01 (E2E: mensajes de envío) |
 | RF-06 | CP-09, CP-10 |
 | RF-07 | CP-11 |
 | RF-08 | CP-12 |
@@ -382,9 +383,9 @@ La columna **Automatizada** dice dónde vive la prueba: **API** (JUnit 5 + MockM
 
 ## 11. Datos de demostración
 
-- **RF-19.** Con el perfil `demo` (`SPRING_PROFILES_ACTIVE=demo`), el backend carga al arrancar **4 practicantes de ejemplo** con datos ficticios y un PDF de muestra: 2 pendientes, 1 viable con observación y 1 no viable.
+- **RF-19.** Con `DEMO_DATA=true`, el backend carga al arrancar **4 practicantes de ejemplo** con datos ficticios y un PDF de muestra: 2 pendientes, 1 viable con observación y 1 no viable.
   - Solo los carga si la tabla está vacía, así que reiniciar no los duplica.
-  - Sin el perfil `demo`, la base arranca vacía.
+  - Con `DEMO_DATA=false`, la base arranca vacía.
   - Los datos de ejemplo son inventados: ningún dato real entra al repositorio.
 
 ## 12. Fuera de alcance
@@ -403,7 +404,7 @@ Se puede mencionar como mejora futura en la sustentación:
 ## 13. Decisiones
 
 **10 de noviembre de 2026:**
-- Stack igual a Kronos (Spring Boot 4.1 + Angular 22) con SQLite en vez de MySQL.
+- ~~Stack igual a Kronos (Spring Boot 4.1 + Angular 22)~~: reemplazado el 11 de noviembre (ver abajo).
 - Se implementan los dos opcionales del reto: login (RF-13) y descarga (RF-14).
 
 **11 de noviembre de 2026:**
@@ -414,5 +415,14 @@ Se puede mencionar como mejora futura en la sustentación:
 - **Login:** JWT, como Kronos (sección 5).
 - **Panel:** filtro por estado con conteos (RF-16); sin búsqueda.
 - **Diseño:** paleta inspirada en el Banco de Bogotá, sin su logo ni su nombre (RNF-10).
-- **Pruebas:** backend (JUnit 5 + MockMvc) y frontend (Vitest); sin Playwright (RNF-13).
-- **Propuestas sin consultar, que se pueden cambiar:** semestre de 1 a 12; celular solo colombiano; sesión de 8 horas en `sessionStorage`; listas en el código; datos de demostración con el perfil `demo` (RF-19).
+- **Pruebas:** reemplazado el 11 de noviembre (ver abajo).
+- **Propuestas sin consultar, que se pueden cambiar:** semestre de 1 a 12; celular solo colombiano; sesión de 8 horas en `sessionStorage`; listas en el código; datos de demostración (RF-19).
+
+**11 de noviembre de 2026, cambio de stack** (antes de escribir código):
+- **Backend: Python 3.12 + Flask 3.1** en vez de Spring Boot. Es una de las tres opciones que nombra el reto y se puede probar de punta a punta antes de la entrega.
+- **Frontend: HTML, CSS y JavaScript puro**, como sugieren los pasos del reto, en vez de Angular. Flask sirve las páginas y la API en el mismo origen.
+- **Datos:** `sqlite3` de Python con SQL directo y migraciones numeradas propias (RNF-02). Login con **JWT** (sección 5), sin cambios.
+- **Pruebas:** pytest para la API y Playwright para el navegador (RNF-13).
+- **Botones en la lista:** «Viable» y «No viable» también en cada fila, como pide el documento del reto (RF-08).
+- **Alcance:** el correo no especifica otro reto; la base es el documento del reto (desarrollo).
+- **Entrega:** hoy a las 11:00 a. m., con el repositorio público.

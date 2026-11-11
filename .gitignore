@@ -1,6 +1,6 @@
 # ============================================================
 # Plataforma de Selección de Practicantes — .gitignore
-# Backend: Java 21 + Maven (backend/) · Frontend: Angular + npm (frontend/)
+# Backend: Python 3.12 + Flask (backend/) · Frontend: HTML, CSS y JS (frontend/)
 # ============================================================
 
 # ---------- Secretos y configuración local ----------
@@ -29,6 +29,16 @@ uploads/
 *.db-shm
 *.sqlite
 *.sqlite3
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
 
 # ---------- Java / Maven ----------
 target/
