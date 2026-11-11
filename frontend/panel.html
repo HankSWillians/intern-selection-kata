@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b4a7a" />
+    <title>Panel del analista · Selección de Practicantes</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script type="module" src="/js/panel.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a href="/" class="brand"><span class="brand-mark" aria-hidden="true"></span>Selección de Practicantes</a>
+        <nav class="nav" aria-label="Principal" data-nav></nav>
+      </div>
+    </header>
+    <main class="content">
+      <header class="page-header">
+        <h1>Practicantes</h1>
+        <p class="lead">Revisa cada perfil y decide si es viable para el proceso.</p>
+      </header>
+
+      <nav class="tabs" aria-label="Filtrar por estado" data-tabs></nav>
+
+      <div class="toast" role="status" data-toast hidden></div>
+
+      <section class="card table-card">
+        <p class="state" role="status" data-loading>Cargando practicantes…</p>
+        <div class="state" role="alert" data-load-error hidden>
+          <p>No pudimos cargar la lista.</p>
+          <button type="button" class="btn btn-secondary" data-retry>Reintentar</button>
+        </div>
+        <p class="state" data-empty hidden></p>
+        <div class="table-wrap" data-table hidden>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col" class="hide-sm">Universidad</th>
+                <th scope="col" class="hide-sm">Carrera</th>
+                <th scope="col" class="num"><abbr title="Semestre">Sem.</abbr></th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="hide-sm">Registro</th>
+                <th scope="col"><span class="sr-only">Decisión</span></th>
+              </tr>
+            </thead>
+            <tbody data-rows></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

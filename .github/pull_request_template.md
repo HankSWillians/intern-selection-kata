@@ -24,5 +24,5 @@
 
 - [ ] Incluye pruebas de lo que cambia
 - [ ] No incluye secretos, archivos `.env`, bases de datos ni hojas de vida
-- [ ] Si toca la base de datos, agrega una migración nueva de Flyway en lugar de editar una ya aplicada
+- [ ] Si toca la base de datos, agrega una migración nueva en backend/migrations/ en lugar de editar una ya aplicada
 - [ ] Actualiza el README si cambia la configuración o la forma de ejecutar

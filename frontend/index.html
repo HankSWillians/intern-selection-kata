@@ -5,17 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0b4a7a" />
     <title>Registro de practicantes · Selección de Practicantes</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/styles.css" />
+    <script type="module" src="/js/registration.js"></script>
   </head>
   <body>
     <header class="topbar">
       <div class="topbar-inner">
         <a href="/" class="brand"><span class="brand-mark" aria-hidden="true"></span>Selección de Practicantes</a>
+        <nav class="nav" aria-label="Principal" data-nav></nav>
       </div>
     </header>
     <main class="content">
-      <h1>Registro de practicantes</h1>
-      <p class="lead">El formulario llega en el PR del frontend.</p>
+      <section class="intro">
+        <h1>Registro de practicantes</h1>
+        <p class="lead">
+          Déjanos tus datos y tu hoja de vida. El equipo de selección revisará tu perfil para el
+          proceso de prácticas.
+        </p>
+      </section>
+
+      <form class="card form" id="registration-form" novalidate>
+        <div class="alert alert-success" role="status" data-success hidden></div>
+        <div class="alert alert-error" role="alert" data-general-error hidden></div>
+
+        <p class="required-note">Todos los campos son obligatorios.</p>
+
+        <div class="grid">
+          <div class="field full">
+            <label for="f-fullName">Nombre completo</label>
+            <input id="f-fullName" name="fullName" type="text" autocomplete="name" maxlength="100" aria-describedby="e-fullName" />
+            <p class="field-error" id="e-fullName"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-email">Correo electrónico</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" aria-describedby="e-email" />
+            <p class="field-error" id="e-email"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-phone">Celular</label>
+            <input id="f-phone" name="phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" aria-describedby="e-phone" />
+            <p class="field-error" id="e-phone"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-university">Universidad</label>
+            <select id="f-university" name="university" aria-describedby="e-university">
+              <option value="" disabled selected>Elige una opción</option>
+            </select>
+            <p class="field-error" id="e-university"></p>
+            <div data-other="university" hidden>
+              <label class="sub-label" for="f-universityOther">¿Cuál universidad?</label>
+              <input id="f-universityOther" name="universityOther" type="text" maxlength="100" aria-describedby="e-universityOther" />
+              <p class="field-error" id="e-universityOther"></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-career">Carrera universitaria</label>
+            <select id="f-career" name="career" aria-describedby="e-career">
+              <option value="" disabled selected>Elige una opción</option>
+            </select>
+            <p class="field-error" id="e-career"></p>
+            <div data-other="career" hidden>
+              <label class="sub-label" for="f-careerOther">¿Cuál carrera?</label>
+              <input id="f-careerOther" name="careerOther" type="text" maxlength="100" aria-describedby="e-careerOther" />
+              <p class="field-error" id="e-careerOther"></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-semester">Semestre actual</label>
+            <select id="f-semester" name="semester" aria-describedby="e-semester">
+              <option value="" disabled selected>Elige una opción</option>
+            </select>
+            <p class="field-error" id="e-semester"></p>
+          </div>
+
+          <div class="field">
+            <span class="label" id="l-cv">Hoja de vida (PDF, máximo 5 MB)</span>
+            <label class="file" for="f-cv">
+              <input id="f-cv" name="cv" type="file" accept="application/pdf,.pdf" aria-labelledby="l-cv" aria-describedby="e-cv" />
+              <span class="file-button">Elegir archivo</span>
+              <span class="file-name" data-file-name>Ningún archivo elegido</span>
+            </label>
+            <p class="field-error" id="e-cv"></p>
+          </div>
+
+          <div class="field full">
+            <label class="checkbox" for="f-dataConsent">
+              <input id="f-dataConsent" name="dataConsent" type="checkbox" aria-describedby="e-dataConsent" />
+              <span>
+                Autorizo el tratamiento de mis datos personales para este proceso de selección,
+                conforme a la Ley 1581 de 2012.
+              </span>
+            </label>
+            <p class="field-error" id="e-dataConsent"></p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" data-submit>Enviar</button>
+        </div>
+      </form>
     </main>
   </body>
 </html>
