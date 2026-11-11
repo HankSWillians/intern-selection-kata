@@ -1,5 +1,5 @@
 # ============================================================
-# CI — build y pruebas de backend y frontend
+# CI — pruebas del backend (Flask) y del frontend (Playwright)
 # ============================================================
 # Un único workflow que termina en `CI Gate`, el check obligatorio
 # de `main`.
@@ -19,8 +19,10 @@
 #   - Los jobs ligeros usan `ubuntu-slim` (1 vCPU) y todos tienen
 #     `timeout-minutes`, para que un job colgado no consuma horas.
 #
-# Mientras `backend/pom.xml` o `frontend/package.json` no existan, su
-# job se omite y `CI Gate` pasa en verde.
+# Mientras `backend/requirements.txt` no exista, el job se omite y
+# `CI Gate` pasa en verde. El frontend es HTML, CSS y JS sin compilar:
+# lo prueban las pruebas de Playwright dentro del job de Python, con el
+# Google Chrome del runner.
 #
 # NO renombrar el job `CI Gate`: el ruleset de `main` lo exige por
 # nombre exacto.
@@ -60,8 +62,7 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 5
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+      app: ${{ steps.filter.outputs.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -108,93 +109,54 @@ jobs:
             [ "${CHANGED}" = "ALL" ] || grep -Eq "^($1/|\.github/workflows/)" <<< "${CHANGED}"
           }
 
-          BACKEND=false
-          FRONTEND=false
-          if exists backend/pom.xml; then
-            if touched backend; then BACKEND=true; fi
+          APP=false
+          if exists backend/requirements.txt; then
+            if touched backend || touched frontend; then APP=true; fi
           else
-            echo "::notice::backend/pom.xml no existe todavía: job Backend omitido."
-          fi
-          if exists frontend/package.json; then
-            if touched frontend; then FRONTEND=true; fi
-          else
-            echo "::notice::frontend/package.json no existe todavía: job Frontend omitido."
+            echo "::notice::backend/requirements.txt no existe todavía: job App omitido."
           fi
 
-          echo "backend=${BACKEND}"   >> "$GITHUB_OUTPUT"
-          echo "frontend=${FRONTEND}" >> "$GITHUB_OUTPUT"
+          echo "app=${APP}" >> "$GITHUB_OUTPUT"
 
           {
             echo "### Componentes"
             echo ""
             echo "| Componente | Se ejecuta |"
             echo "|---|---|"
-            echo "| backend | \`${BACKEND}\` |"
-            echo "| frontend | \`${FRONTEND}\` |"
+            echo "| backend + frontend | \`${APP}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ----------------------------------------------------------
-  # 2. Backend — Java 21 + Maven
+  # 2. App — Python 3.12 + pytest (API y, si existen, pruebas e2e)
   # ----------------------------------------------------------
-  backend:
-    name: Backend
+  app:
+    name: App
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-python@v6
         with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-          cache-dependency-path: backend/pom.xml
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
 
-      # `verify` corre las pruebas unitarias y las de integración
-      # (SQLite en un archivo temporal, sin Docker).
-      # -B modo batch, -ntp oculta el progreso de las descargas.
-      - name: Verificar con Maven
-        run: ./mvnw -B -ntp verify
-
-  # ----------------------------------------------------------
-  # 3. Frontend — Angular + npm
-  # ----------------------------------------------------------
-  frontend:
-    name: Frontend
-    needs: changes
-    if: needs.changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      # `npm ci` instala exactamente lo del lockfile y falla si no existe.
       - name: Instalar dependencias
-        run: npm ci
+        run: pip install -r requirements-dev.txt
 
-      # `--if-present`: un script que todavía no existe no rompe la CI.
-      - name: Lint
-        run: npm run lint --if-present
-      - name: Typecheck
-        run: npm run typecheck --if-present
+      # Las pruebas del navegador usan el Google Chrome que ya trae el runner
+      # de Ubuntu: no se descarga Chromium ni se instalan paquetes del sistema
+      # (más rápido, y no depende de los espejos de apt).
       - name: Pruebas
-        run: npm run test --if-present
-      - name: Build
-        run: npm run build
+        env:
+          PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
+        run: python -m pytest
 
   # ----------------------------------------------------------
   # 4. CI Gate — el check obligatorio
@@ -207,7 +169,7 @@ jobs:
   # ----------------------------------------------------------
   ci-gate:
     name: CI Gate
-    needs: [changes, backend, frontend]
+    needs: [changes, app]
     if: always() && (github.event_name == 'push' || !github.event.pull_request.draft)
     runs-on: ubuntu-slim
     timeout-minutes: 5
